@@ -1,11 +1,20 @@
+import goalModel from "../models/goalModel.js";
 //@desc Get goals
 //@route GET /api/goals
 //@access Private
 const getGoals = async (req, res) => {
   try {
-    res.status(200).json({ message: "Goals" });
+    const goals = await goalModel.find();
+
+    if (goals.length > 0) {
+      res.status(200).json({ goals, message: "Goals" });
+    } else {
+      res.status(404).json({ message: "No goals found" });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "Failed to retrieve goals. Please try again later." });
   }
 };
 
@@ -14,14 +23,21 @@ const getGoals = async (req, res) => {
 //@access Private
 const createGoal = async (req, res) => {
   try {
-    const {text} = req.body;
-    if(!text) {
-       res.status(400);
-       throw new Error("Please add a text field");
+    const { text } = req.body;
+    if (!text) {
+      res.status(400);
+      throw new Error("Please add a text field");
+      //   return res.status(400).json({ error: "Please add a text field" });
     }
-    res.status(200).json({ message: "Goal set" });
+    // const goal = await goalModel.create({ text });
+    const goal = new goalModel({ text });
+    await goal.save();
+
+    res.status(201).json({ goal, message: "Goal created" });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "Failed to create goal. Please try again later." });
   }
 };
 
@@ -30,9 +46,22 @@ const createGoal = async (req, res) => {
 //@access Private
 const updateGoal = async (req, res) => {
   try {
-    res.status(200).json({ message: `Goal update for ${req.params.id}` });
+    const { id } = req.params;
+    const { text } = req.body;
+    // Find the goal by ID and update its text
+    const updatedGoal = await goalModel.findByIdAndUpdate(
+      id,
+      { text },
+      { new: true, runValidators: true }
+    );
+    if (!updatedGoal) {
+      return res.status(404).json({ error: "Goal not found" });
+    }
+    res.status(200).json({ goal: updatedGoal, message: "Goal updated" });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "Failed to update goal. Please try again later." });
   }
 };
 
@@ -41,9 +70,17 @@ const updateGoal = async (req, res) => {
 //@access Private
 const deleteGoal = async (req, res) => {
   try {
-    res.status(200).json({ message: `Goal deleted for ${req.params.id}` });
+    const { id } = req.params;
+    //Find the goal by ID and delete its text
+    const deletedGoal = await goalModel.findByIdAndDelete(id);
+    if (!deletedGoal) {
+      return res.status(404).json({ error: "Goal not found" });
+    }
+    res.status(200).json({ id, message: "Goal deleted" });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(500)
+      .json({ error: "Failed to delete goal. Please try again later." });
   }
 };
 
