@@ -26,10 +26,16 @@ const userRegister = async (req, res) => {
     // Save the user document into the database
     await newUser.save();
 
-    res.status(201).json({
-      userId: newUser._id,
-      message: "User registered successfully",
-    });
+    if (newUser) {
+      res.status(201).json({
+        userId: newUser._id,
+        message: "User registered successfully",
+      });
+    } else {
+      res.status(401).json({
+        error: "Invalid user data",
+      });
+    }
   } catch (error) {
     res.status(500).json({
       error: "Failed to register a user. Please try again later.",
@@ -42,7 +48,52 @@ const userRegister = async (req, res) => {
 //@access Public
 const userLogin = async (req, res) => {
   try {
+    // Extract login form data from request body
+    const { email, password } = req.body;
+    // Check if the email already exists in the database
+    const user = await userModel.findOne({ email });
+
+    if (user && (await user.comparePassword(password))) {
+      // Password matched, generate and set the token as a secure HTTP-only cookie
+      generateToken(res, user._id);
+
+      res.status(200).json({
+        userId: user._id,
+        message: "User logged in successfully",
+      });
+    } else {
+      res.status(401).json({
+        error: "Invalid or incorrect email or password",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to login a user. Please try again later.",
+    });
+  }
+};
+
+//@desc User logout
+//@route POST /api/users/logout
+//@access Public
+const userLogout = async (req, res) => {
+  try {
+    // Clear the authentication token (e.g., delete from cookies, clear session, etc.)
+    res.clearCookie("token"); //Clear the "token" cookie
+    res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to logout. Please try again later.",
+    });
+  }
+};
+
+//@desc Get user data
+//@route GET /api/users/me
+//@access Private
+const getUser = async (req, res) => {
+  try {
   } catch (error) {}
 };
 
-export { userRegister, userLogin };
+export { userRegister, userLogin, getUser, userLogout };
