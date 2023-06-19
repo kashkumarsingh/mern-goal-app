@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { registerUser } from "../features/auth/authSlice.js";
+import { registerUser, reset } from "../features/auth/authSlice.js";
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
   const message = useSelector((state) => state.auth.user);
   const [formData, setFormData] = useState({
@@ -14,6 +16,17 @@ const RegisterPage = () => {
     password: "",
   });
   const [showMessage, setShowMessage] = useState(false);
+
+  useEffect(() => {
+    if (error || message) {
+      setShowMessage(true);
+      const timer = setTimeout(() => {
+        setShowMessage(false);
+      }, 2500); // Hide the message after 5 seconds
+      dispatch(reset);
+      return () => clearTimeout(timer);
+    }
+  }, [error, message, dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -26,19 +39,9 @@ const RegisterPage = () => {
     e.preventDefault();
     // Handle form submission using dispatch
     dispatch(registerUser(formData));
+    navigate("/");
     setFormData({ name: "", email: "", password: "" });
   };
-
-  useEffect(() => {
-    if (error || message) {
-      setShowMessage(true);
-      const timer = setTimeout(() => {
-        setShowMessage(false);
-      }, 5000); // Hide the message after 5 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [error, message]);
 
   return (
     <div className="register">

@@ -1,6 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const user = JSON.parse(localStorage.getItem("userId"));
+
+const initialState = {
+  user: user ? user : null,
+  isLoading: false,
+  isError: false,
+  isSuccess: false,
+  message: "",
+};
+
 //Register a new user
 export const registerUser = createAsyncThunk(
   "auth/register",
@@ -9,7 +19,11 @@ export const registerUser = createAsyncThunk(
       const response = await axios.post("/api/users/", userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      const message =
+        (error.response && error.response.data && error.response.data.error) ||
+        error.message ||
+        error.toString();
+      return rejectWithValue(message);
     }
   }
 );
@@ -20,6 +34,9 @@ export const loginUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post("/api/users/login", userData);
+      if (response.data) {
+        localStorage.setItem("userId", JSON.stringify(response.data.userId));
+      }
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -34,46 +51,54 @@ extra: Additional data or dependencies that can be passed to the async thunk.
 rejectWithValue: A function to reject the async thunk with a specific value, which can be used to handle errors and provide custom error payloads.
 */
 
-const initialState = {
-  user: null,
-  loading: false,
-  error: null,
-};
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    reset: (state) => {
+      state.isLoading = false;
+      state.isError = false;
+      state.isSuccess = false;
+      state.message = "";
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isLoading = false;
+        state.isSuccess = true;
         state.user = action.payload;
-        state.error = false;
+        state.message = action.payload.message;
+        state.isError = false;
       })
       .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+        state.isLoading = false;
+        state.isError = true;   
+        state.message = action.payload.message;
+        state.user = null;
       })
-      .addCase(loginUser.pending, (state)=> {
-         state.loading = true;
-         state.error = false;
+      .addCase(loginUser.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
       })
-      .addCase(loginUser.fulfilled, (state, action)=> {
-         state.loading = false;
-         state.user = action.payload;
-         state.error = false;
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isError = false;
+        state.message = action.payload.message;
       })
       .addCase(loginUser.rejected, (state, action) => {
-         state.loading = false;
-         state.error = action.payload;
-      })
-
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      });
   },
 });
 
+export const { reset } = authSlice.actions;
 export default authSlice.reducer;

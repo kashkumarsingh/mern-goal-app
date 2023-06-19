@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { loginUser } from "../features/auth/authSlice.js";
+import { loginUser, reset } from "../features/auth/authSlice.js";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -12,14 +12,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showMessage, setShowMessage] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // You can call your login API or dispatch an action to handle the login process
-    dispatch(loginUser({ email, password }));
-    setEmail("");
-    setPassword("");
-  };
-
   useEffect(() => {
     if (error || message) {
       setShowMessage(true);
@@ -28,9 +20,21 @@ const LoginPage = () => {
         setShowMessage(false);
       }, 2500); // Hide the message after 5 seconds
 
+      dispatch(reset());
+
       return () => clearTimeout(timer);
     }
-  }, [error, message]);
+  }, [error, message, dispatch]);
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // You can call your login API or dispatch an action to handle the login process
+    dispatch(loginUser({ email, password }));
+    setEmail("");
+    setPassword("");
+  };
+
   return (
     <div className="login">
       <Container>
