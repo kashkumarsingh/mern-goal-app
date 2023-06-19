@@ -88,12 +88,70 @@ const userLogout = async (req, res) => {
   }
 };
 
+//@desc Get user rofile
+//@route GET /api/users/profile
+//@access Private
+const getUserProfile = async (req, res) => {
+  try {
+    // Access the user ID from req.user
+    const userId = req.user._id;
+    // Perform actions with the user ID, such as fetching the user's profile
+    const userProfile = await userModel.findById(userId).select("-password");
+    // Check if the user profile exists
+    if (!userProfile) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+
+    // Return the user profile
+    res.status(200).json({ profile: userProfile });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//@desc Update user rofile
+//@route PUT /api/users/profile/:id
+//@access Private
+const updateUserProfile = async (req, res) => {
+  try {
+    // Access the user ID from req.user
+    const userId = req.user._id;
+    // Extract the updated profile data from the request body
+    const { name, email, password } = req.body;
+    // Find the user by ID and update the profile data
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { name, email, password },
+      { new: true }
+    );
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // Return the updated user profile
+    res.status(200).json({ profile: user });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 //@desc Get user data
 //@route GET /api/users/me
 //@access Private
 const getUser = async (req, res) => {
   try {
-  } catch (error) {}
+    // Return the updated user profile
+    res.status(200).json({ message: "Its me" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
-export { userRegister, userLogin, getUser, userLogout };
+export {
+  userRegister,
+  userLogin,
+  getUser,
+  userLogout,
+  getUserProfile,
+  updateUserProfile,
+};

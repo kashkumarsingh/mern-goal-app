@@ -4,7 +4,7 @@ import goalModel from "../models/goalModel.js";
 //@access Private
 const getGoals = async (req, res) => {
   try {
-    const goals = await goalModel.find();
+    const goals = await goalModel.find({ user: req.user._id });
 
     if (goals.length > 0) {
       res.status(200).json({ goals, message: "Goals" });
@@ -30,7 +30,7 @@ const createGoal = async (req, res) => {
       //   return res.status(400).json({ error: "Please add a text field" });
     }
     // const goal = await goalModel.create({ text });
-    const goal = new goalModel({ text });
+    const goal = new goalModel({ text, user: req.user._id });
     await goal.save();
 
     res.status(201).json({ goal, message: "Goal created" });
@@ -48,9 +48,10 @@ const updateGoal = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
+
     // Find the goal by ID and update its text
     const updatedGoal = await goalModel.findByIdAndUpdate(
-      id,
+      { _id: id, user: req.user._id },
       { text },
       { new: true, runValidators: true }
     );
@@ -72,7 +73,10 @@ const deleteGoal = async (req, res) => {
   try {
     const { id } = req.params;
     //Find the goal by ID and delete its text
-    const deletedGoal = await goalModel.findByIdAndDelete(id);
+    const deletedGoal = await goalModel.findByIdAndDelete({
+      _id: id,
+      user: req.user._id,
+    });
     if (!deletedGoal) {
       return res.status(404).json({ error: "Goal not found" });
     }
