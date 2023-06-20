@@ -9,7 +9,7 @@ const getGoals = async (req, res) => {
     if (goals.length > 0) {
       res.status(200).json({ goals, message: "Goals" });
     } else {
-      res.status(404).json({ message: "No goals found" });
+      res.status(404).json({error: "No goals found" });
     }
   } catch (error) {
     res

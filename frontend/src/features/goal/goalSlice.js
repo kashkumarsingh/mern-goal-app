@@ -9,10 +9,10 @@ const initialState = {
   message: "",
 };
 
-//Get goals of the user that is currently logged in
+// Get goals of the user that is currently logged in
 export const fetchGoals = createAsyncThunk(
   "goals/fetchGoals",
-  async ({ rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get("/api/goals/");
       return response.data.goals;
@@ -32,7 +32,7 @@ export const addGoal = createAsyncThunk(
   async (goalFormData, { rejectWithValue }) => {
     try {
       const response = await axios.post("/api/goals/", goalFormData);
-      return response.data.goal;
+      return response.data;
     } catch (error) {
       const message =
         (error.response && error.response.data && error.response.data.error) ||
@@ -49,7 +49,7 @@ export const updateGoal = createAsyncThunk(
   async ({ id, text }, { rejectWithValue }) => {
     try {
       const response = await axios.put(`/api/goals/${id}`, { text });
-      return response.data.goal;
+      return response.data;
     } catch (error) {
       const message =
         (error.response && error.response.data && error.response.data.error) ||
@@ -79,7 +79,14 @@ export const removeGoal = createAsyncThunk(
 const goalSlice = createSlice({
   name: "goals",
   initialState,
-  reducers: {},
+  reducers: {
+    reset: (state) => {
+      state.isLoading = false;
+      state.isError = false;
+      state.isSuccess = false;
+      state.message = "";
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchGoals.pending, (state) => {
@@ -101,7 +108,8 @@ const goalSlice = createSlice({
       .addCase(addGoal.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.goals.push(action.payload);
+        state.goals.push(action.payload.goal);
+        state.message = action.payload.message;
       })
       .addCase(addGoal.rejected, (state, action) => {
         state.isLoading = false;
@@ -151,5 +159,5 @@ const goalSlice = createSlice({
       });
   },
 });
-
+export const { reset } = goalSlice.actions;
 export default goalSlice.reducer;
