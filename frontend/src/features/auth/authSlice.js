@@ -43,6 +43,25 @@ export const loginUser = createAsyncThunk(
     }
   }
 );
+
+//Logout a user
+export const logoutUser = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/users/logout");
+      //Remove userId from local storage
+      localStorage.removeItem("userId");
+      return response.data;
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.error) ||
+        error.message ||
+        error.toString();
+      return rejectWithValue(message);
+    }
+  }
+);
 /*
 The ThunkAPI object provided by Redux Toolkit contains several useful values and functions that can be used within async thunks:
 dispatch: A function to dispatch actions.
@@ -78,8 +97,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = true;   
-        state.message = action.payload.message;
+        state.isError = true;
+        state.message = action.payload;
         state.user = null;
       })
       .addCase(loginUser.pending, (state) => {
@@ -91,8 +110,24 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isError = false;
         state.message = action.payload.message;
+        state.isSuccess = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload.error;
+      })
+      .addCase(logoutUser.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+      })
+      .addCase(logoutUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isError = false;
+        state.message = action.payload;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
