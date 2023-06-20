@@ -108,7 +108,11 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {goals.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={3}>Loading...</td>
+                  </tr>
+                ) : goals.length > 0 ? (
                   goals.map((goal) => (
                     <tr key={goal._id}>
                       <td>{goal.text}</td>

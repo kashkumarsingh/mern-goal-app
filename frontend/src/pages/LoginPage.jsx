@@ -40,15 +40,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login d-flex justify-content-center align-items-center vh-100">
-      <Container>
+    <div className="form-container login d-flex justify-content-center align-items-center vh-100">
+       <div className="form-inner">
+       <Container>
         <Row>
           <Col xs={12}>
             <Form
               className="d-flex flex-column align-items-center justify-content-center"
               onSubmit={handleSubmit}
             >
-              <Form.Group className="mb-3" controlId="formEmail">
+              <Form.Group className="mb-3 w-100" controlId="formEmail">
                 <Form.Label>Email address</Form.Label>
                 <Form.Control
                   type="email"
@@ -58,7 +59,7 @@ const LoginPage = () => {
                 />
               </Form.Group>
               {/* Email */}
-              <Form.Group className="mb-3" controlId="formPassword">
+              <Form.Group className="mb-3 w-100" controlId="formPassword">
                 <Form.Label>Password</Form.Label>
                 <Form.Control
                   type="password"
@@ -73,8 +74,6 @@ const LoginPage = () => {
               </Button>
             </Form>
           </Col>
-        </Row>
-        <Row>
           <Col xs={12}>
             <div className="register-box text-center">
               Create an account?{" "}
@@ -87,6 +86,7 @@ const LoginPage = () => {
           </Col>
         </Row>
       </Container>
+       </div>
     </div>
   );
 };
