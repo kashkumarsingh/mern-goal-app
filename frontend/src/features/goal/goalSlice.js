@@ -122,20 +122,9 @@ const goalSlice = createSlice({
       })
       .addCase(updateGoal.fulfilled, (state, action) => {
         state.isLoading = false;
-        const updatedGoal = action.payload;
-        // const index = state.goals.findIndex(
-        //   (goal) => goal._id === updateGoal._id
-        // );
-        // if (index !== -1) {
-        //   state.goals[index] = updatedGoal;
-        // }
-        state.goals = state.goals.map((goal) => {
-          if (goal._id === updatedGoal._id) {
-            return updatedGoal;
-          }
-          return goal;
-        });
         state.isSuccess = true;
+        const updatedGoal = action.payload;
+        state.goals = state.goals.map((goal) => goal._id === updatedGoal._id ? updatedGoal : goal);
       })
       .addCase(updateGoal.rejected, (state, action) => {
         state.isLoading = false;
@@ -161,3 +150,10 @@ const goalSlice = createSlice({
 });
 export const { reset } = goalSlice.actions;
 export default goalSlice.reducer;
+
+/**
+ * const index = state.goals.findIndex((goal) => goal._id === updateGoal._id);
+    if (index !== -1) {
+      state.goals[index] = updatedGoal;
+    }
+ */
