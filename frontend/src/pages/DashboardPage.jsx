@@ -36,7 +36,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success(`Success: ${message}`);
+      // toast.success(`Success: ${message}`);
       setEditGoalId(null);
       setFormData({ text: "" });
       dispatch(fetchGoals()); // Manually refresh the goals list after a successful update
