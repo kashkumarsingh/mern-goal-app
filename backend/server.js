@@ -7,6 +7,7 @@ import connectToDB from "./config/db.js";
 import { goalRouter } from "./routes/goalRoutes.js";
 import { userRouter } from "./routes/userRoutes.js";
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 //Load environment variables from .env file
 dotenv.config();
@@ -25,9 +26,14 @@ app.use(errorHandler);
 app.use("/api/goals", goalRouter);
 app.use("/api/users", userRouter);
 
-//Start the server
-const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is runnig on port ${PORT}`);
-});
+//Export the app instance for Vercel deployment
+export default app;
+
+
+//Start the server
+
+
+// app.listen(PORT, () => {
+//   console.log(`Server is runnig on port ${PORT}`);
+// });
