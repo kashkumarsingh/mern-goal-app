@@ -1,46 +1,63 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Container, Row, Col, Form, Button, Table } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
+import GoalForm from "../components/GoalForm";
+import GoalTable from "../components/GoalTable";
+import { toast } from "react-toastify";
 import {
   addGoal,
   reset,
   fetchGoals,
-  updateGoal,
   removeGoal,
+  updateGoal,
 } from "../features/goal/goalSlice.js";
-import { toast } from "react-toastify";
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { goals, isLoading } = useSelector((state) => state.goal);
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.auth);
+  const { isLoading, isSuccess, isError, message, goals} = useSelector((state) => state.goal);
   const [formData, setFormData] = useState({
     text: "",
   });
+
   const [editGoalId, setEditGoalId] = useState(null);
 
   useEffect(() => {
     if (!user) {
       navigate("/login");
     }
-    dispatch(fetchGoals());
+    dispatch(fetchGoals()); // Fetch goals when the component mounts
     return () => {
       dispatch(reset());
     };
-  }, [user, navigate, dispatch]);
+  }, [navigate, dispatch, user]);
 
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(`Success: ${message}`);
+      setEditGoalId(null);
+      setFormData({ text: "" });
+      dispatch(fetchGoals()); // Manually refresh the goals list after a successful update
+    }
+    if (isError) {
+      toast.error(`Error: ${message}`);
+    }
+  }, [isSuccess, isError, message, dispatch]);
+
+
+  const handleRemoveGoal = (goalId) => {
+    dispatch(removeGoal(goalId));
+  };
   const handleEditGoal = (goalId, goalText) => {
     setFormData({ text: goalText });
     setEditGoalId(goalId);
   };
-
   const handleCancelEdit = () => {
     setFormData({ text: "" });
     setEditGoalId(null);
   };
-
   const isEditing = editGoalId !== null;
 
   const handleInputChange = (e) => {
@@ -49,15 +66,9 @@ const DashboardPage = () => {
       [e.target.name]: e.target.value,
     }));
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.text) {
-      toast.error("Goal field is mandatory");
-      return;
-    }
     if (isEditing) {
-      // Dispatch an action to update the goal
       dispatch(updateGoal({ id: editGoalId, text: formData.text }));
       setFormData({ text: "" });
       setEditGoalId(null);
@@ -68,87 +79,32 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="dashboard">
+    <div className="goal-dashboard">
       <Container>
         <Row>
           <Col xs={12}>
-            <Form
-              className="d-flex flex-column align-items-center justify-content-center"
+            <GoalForm
               onSubmit={handleSubmit}
-            >
-              <Form.Group className="mb-3" controlId="formGoal">
-                <Form.Label>Create Your Goal*</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter your goal here"
-                  name="text"
-                  value={formData.text}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-              <Button type="submit" variant="primary">
-                {isLoading ? "Loading..." : isEditing ? "Update" : "Add Goal"}
-              </Button>
-              {isEditing && (
-                <Button variant="secondary" onClick={handleCancelEdit}>
-                  Cancel
-                </Button>
-              )}
-            </Form>
+              formData={formData}
+              onChange={handleInputChange}
+              onCancelEdit={handleCancelEdit}
+              isLoading={isLoading}
+              isEditing={isEditing}
+            />
           </Col>
         </Row>
         <Row>
           <Col xs={12}>
-            <Table striped>
-              <thead>
-                <tr>
-                  <th>Goal Name</th>
-                  <th>Created At:</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={3}>Loading...</td>
-                  </tr>
-                ) : goals.length > 0 ? (
-                  goals.map((goal) => (
-                    <tr key={goal._id}>
-                      <td>{goal.text}</td>
-                      <td>
-                        {new Date(goal.createdAt).toLocaleDateString("en-GB")}
-                      </td>
-                      <td>
-                        <Button
-                          variant="danger"
-                          className="text-left"
-                          onClick={() => dispatch(removeGoal(goal._id))}
-                        >
-                          Delete
-                        </Button>
-                        <Button
-                          variant="warning"
-                          className="text-white"
-                          onClick={() => handleEditGoal(goal._id, goal.text)}
-                        >
-                          Update
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3}>No such goals</td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
+            <GoalTable
+              goals={goals}
+              isLoading={isLoading}
+              onEditGoal={handleEditGoal}
+              onRemoveGoal={handleRemoveGoal}
+            />
           </Col>
         </Row>
       </Container>
     </div>
   );
 };
-
 export default DashboardPage;
